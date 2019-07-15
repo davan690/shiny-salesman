@@ -1,0 +1,49 @@
+---
+title: "Meta data for location data"
+author: "Anthony Davidson"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+#libraries
+library(rgdal)
+library(tidyverse)
+library(ggplot2)
+
+#knitting options
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+usa_cities <- readRDS("data/usa_cities.rds")
+all_cities <- readRDS("data/cities.rds")
+
+# data from mymaps google
+
+```
+
+
+```{r}
+file <- "../data/Canberra-Transit.kmz"
+
+?readOGR
+SST_start = readOGR(file) 
+# OGR data source with driver: LIBKML 
+# Source: "Burrows_et_al_Nature_traj_ocean_NH1.kmz", layer: "SST_start"
+# with 42205 features
+# It has 12 fields
+SST_1 = readOGR(file,"SST_1") 
+# OGR data source with driver: LIBKML 
+# Source: "Burrows_et_al_Nature_traj_ocean_NH1.kmz", layer: "SST_1"
+# with 7719 features
+#It has 12 fields
+```
+
