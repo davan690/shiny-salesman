@@ -23,8 +23,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r}
-usa_cities <- readRDS("data/usa_cities.rds")
-all_cities <- readRDS("data/cities.rds")
+usa_cities <- readRDS("../data/usa_cities.rds")
+all_cities <- readRDS("../data/cities.rds")
 
 # data from mymaps google
 
@@ -32,18 +32,25 @@ all_cities <- readRDS("data/cities.rds")
 
 
 ```{r}
-file <- "../data/Canberra-Transit.kmz"
-
-?readOGR
-SST_start = readOGR(file) 
-# OGR data source with driver: LIBKML 
-# Source: "Burrows_et_al_Nature_traj_ocean_NH1.kmz", layer: "SST_start"
-# with 42205 features
-# It has 12 fields
-SST_1 = readOGR(file,"SST_1") 
+# file <- "../data/Canberra-Transit.kmz"
+# 
+# ?readOGR
+# SST_start = readOGR("../data/Canberra-Transit.kml", ) 
+# # OGR data source with driver: LIBKML 
+# # Source: "Burrows_et_al_Nature_traj_ocean_NH1.kmz", layer: "SST_start"
+# # with 42205 features
+# # It has 12 fields
+# SST_1 = readOGR(file,"SST_1") 
 # OGR data source with driver: LIBKML 
 # Source: "Burrows_et_al_Nature_traj_ocean_NH1.kmz", layer: "SST_1"
 # with 7719 features
 #It has 12 fields
 ```
+## RDS file structure
+
+```{r}
+kableExtra::kable(head(usa_cities))
+```
+
+### Importing data from google mymaps
 
