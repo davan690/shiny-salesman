@@ -30,22 +30,6 @@ all_cities <- readRDS("../data/cities.rds")
 
 ```
 
-
-```{r}
-# file <- "../data/Canberra-Transit.kmz"
-# 
-# ?readOGR
-# SST_start = readOGR("../data/Canberra-Transit.kml", ) 
-# # OGR data source with driver: LIBKML 
-# # Source: "Burrows_et_al_Nature_traj_ocean_NH1.kmz", layer: "SST_start"
-# # with 42205 features
-# # It has 12 fields
-# SST_1 = readOGR(file,"SST_1") 
-# OGR data source with driver: LIBKML 
-# Source: "Burrows_et_al_Nature_traj_ocean_NH1.kmz", layer: "SST_1"
-# with 7719 features
-#It has 12 fields
-```
 ## RDS file structure
 
 ```{r}
@@ -53,4 +37,247 @@ kableExtra::kable(head(usa_cities))
 ```
 
 ### Importing data from google mymaps
+
+This file comes as a `.kmz` file as [here]("https://www.google.com.au/maps/d/u/0/embed?mid=1DAgemW-rkdMHTO8fxnbvbSVF4H0XNLd_")
+
+### `kmz` conversion
+
+We need to convert the my-maps data from a zipped `kml` file that is stored as the `kmz` file downloaded from mymaps data. \newline
+Follow these steps [currently not working]:
+
+1. Download data
+2. Add `.zip` to `.kml` file
+3. Unzip renamed file (as per normal in windows)
+4. Change the file extention to `kmz`
+5. Import correct file sections using the following code:
+
+### Running code
+
+```{r}
+##librares needed
+library(rgdal)
+library(tidyverse)
+library(ggplot2)
+library(sf)
+```
+
+```{r eval=FALSE, include=FALSE}
+sharks <- readOGR("./data/shark-sites-sightings.kmz") 
+
+sharks
+```
+
+## Splitting data
+
+Grids (polygons) and abundance is points!!
+
+```{r}
+res.one.grids <- readOGR("./data/i-esearch.kml", require_geomType=c("wkbPolygon")) 
+
+res.one.points <- readOGR("./data/i-esearch.kml", require_geomType=c("wkbPoint")) 
+```
+
+```{r}
+file <- "./data/i-esearch.kml"
+nc <- st_read(dsn = file, quiet = TRUE)
+# limit to first 2 counties
+nc <- nc[1:2,]
+# convert to SpatialPolygonsDataFrame
+nc_sp <- as(nc, "Spatial")
+```
+
+```{r}
+# mod data for tidyverse and lat/longs
+library(tidyverse)
+library(leaflet)
+# convert res.one.points to tibble for easy mucking around
+res.one.points %>%
+  class()
+
+res.one.points$Name
+res.one.points$Description
+
+dat <- as.data.frame(res.one.points[1][,1])
+
+dat1 <- dat %>%
+  mutate(lng = coords.x1,
+         lat = coords.x2) %>%
+    select(lng, lat, Name)
+
+str(dat1)
+# #make one of those for fun
+#  # SpatialPointsDataFrame(res.one.points[,c("lng", "lat")], res.one.points)
+# require(stringr)
+# 
+# 
+# variable <- c(paste0("A", c(rep(1, 4), rep(2, 3))),
+#               paste0("B", rep(1, 4))
+#               )
+# 
+# data.frame(
+#     treatment = str_extract(variable, "[[:alpha:]]"),
+#     time = as.numeric(str_extract(variable, "[[:digit:]]"))
+#     )
+# 
+# # %>%
+#   extract(coordinates, into = c("lat", "long"), regex = "([+]+)([-]+)")
+
+```
+
+Now to add data to map:
+
+```{r fig.height=12, fig.width=7}
+m3 <- leaflet(quakes) %>%
+        addProviderTiles("Stamen.Toner") %>%
+        addMarkers(lat = dat1$lat, lng = dat1$lng)
+m3
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
+# import jsosn data from leaflet
+# instructions here...
+
+
+# From http://leafletjs.com/examples/choropleth/us-states.js
+# Data Referenced from https://github.com/rstudio/leaflet/tree/master/docs/json/
+states <- geojsonio::geojson_read("./json/us-states.geojson", what = "sp")
+bins <- c(0, 10, 20, 50, 100, 200, 500, 1000, Inf)
+pal <- colorBin("YlOrRd", domain = states$density, bins = bins)
+labels <- sprintf(
+  "<strong>%s</strong><br/>%g people / mi<sup>2</sup>",
+  states$name, states$density
+) %>% lapply(htmltools::HTML)
+leaflet(states) %>%
+  setView(-96, 37.8, 4) %>%
+  addProviderTiles("MapBox", options = providerTileOptions(
+    id = "mapbox.light",
+    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN'))) %>%
+  addPolygons(
+    fillColor = ~pal(density),
+    weight = 2,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7,
+    highlight = highlightOptions(
+      weight = 5,
+      color = "#666",
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE),
+    label = labels,
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "15px",
+      direction = "auto")) %>%
+  addLegend(pal = pal, values = ~density, opacity = 0.7, title = NULL,
+    position = "bottomright")
+```
+
+
+## Extracting mymaps data
+
+This is for security reasons.
+
+Dont forget to unzip `kmz` file from `mymaps` so we can use the following code:
+
+### First
+
+- rename BikePaths.kmz to BikePaths.kml.zip
+- unzip this file
+- read the unzipped file with st_read("doc.kml")
+
+I think that reading .kmz (i.e.. zipped .kml's) files requires libkml (which your gdal lib doesn' t have), and that the kml driver (not the libkml driver) only reads .kml.
+
+```{r}
+sharks <- readOGR("./data/ssightings.kml") 
+
+sharks
+```
+
+## Splitting data
+
+Grids (polygons) and abundance is points!!
+
+```{r}
+res.one.grids <- readOGR("./data/research.kml", require_geomType=c("wkbPolygon")) 
+
+res.one.points <- readOGR("./data/research.kml", require_geomType=c("wkbPoint")) 
+```
+But its not correct...
+
+```{r}
+file <- "./data/research.kml"
+nc <- st_read(dsn = file, quiet = TRUE)
+# limit to first 2 counties
+nc <- nc[1:2,]
+# convert to SpatialPolygonsDataFrame
+nc_sp <- as(nc, "Spatial")
+```
+
+```{r}
+# mod data for tidyverse and lat/longs
+library(tidyverse)
+
+# convert res.one.points to tibble for easy mucking around
+res.one.points %>%
+  class()
+
+res.one.points$Name
+res.one.points$Description
+
+dat <- as.data.frame(res.one.points[1][,1])
+
+dat1 <- dat %>%
+  mutate(lng = coords.x1,
+         lat = coords.x2) %>%
+    select(lng, lat, Name)
+
+str(dat1)
+# #make one of those for fun
+#  # SpatialPointsDataFrame(res.one.points[,c("lng", "lat")], res.one.points)
+# require(stringr)
+# 
+# 
+# variable <- c(paste0("A", c(rep(1, 4), rep(2, 3))),
+#               paste0("B", rep(1, 4))
+#               )
+# 
+# data.frame(
+#     treatment = str_extract(variable, "[[:alpha:]]"),
+#     time = as.numeric(str_extract(variable, "[[:digit:]]"))
+#     )
+# 
+# # %>%
+#   extract(coordinates, into = c("lat", "long"), regex = "([+]+)([-]+)")
+
+```
+
+Now to add data to map:
+
+```{r}
+m3 <- leaflet(quakes) %>%
+        addProviderTiles("Stamen.Toner") %>%
+        addMarkers(lat = dat1$lat, lng = dat1$lng)
+m3
+```
+
+```{r}
+# a different approach
+# following blog better this makes more sense
+
+#data.frame core data
+dat$lng
+dat1$lng
+dat1$Name
+
+```
+
+```{r}
+#simple steps...
+# 1. add data to mymaps datasets
+
+```
 

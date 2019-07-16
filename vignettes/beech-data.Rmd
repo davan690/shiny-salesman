@@ -1,0 +1,122 @@
+---
+title: "R Notebook"
+subtitle: An Interactive Map
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+---
+  
+```{r libraries-info}
+library(leaflet)
+library(rgdal)
+library(sf)
+```
+
+## Importing data
+
+```{r}
+sharks <- readOGR("./data/ssightings.kml") 
+sharks
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Splitting data
+
+Grids (polygons) and abundance is points!!
+```{r}
+res.one.grids <- readOGR("./data/research.kml", require_geomType=c("wkbPolygon")) 
+res.one.points <- readOGR("./data/research.kml", require_geomType=c("wkbPoint")) 
+```
+But its not correct...
+
+```{r}
+file <- "./data/research.kml"
+nc <- st_read(dsn = file, quiet = TRUE)
+# limit to first 2 counties
+nc <- nc[1:2,]
+# convert to SpatialPolygonsDataFrame
+nc_sp <- as(nc, "Spatial")
+```
+
+```{r}
+# mod data for tidyverse and lat/longs
+library(tidyverse)
+
+# convert res.one.points to tibble for easy mucking around
+res.one.points %>%
+  class()
+
+res.one.points$Name
+res.one.points$Description
+
+dat <- as.data.frame(res.one.points[1][,1])
+
+dat1 <- dat %>%
+  mutate(lng = coords.x1,
+         lat = coords.x2) %>%
+    select(lng, lat, Name)
+
+str(dat1)
+# #make one of those for fun
+#  # SpatialPointsDataFrame(res.one.points[,c("lng", "lat")], res.one.points)
+# require(stringr)
+# 
+# 
+# variable <- c(paste0("A", c(rep(1, 4), rep(2, 3))),
+#               paste0("B", rep(1, 4))
+#               )
+# 
+# data.frame(
+#     treatment = str_extract(variable, "[[:alpha:]]"),
+#     time = as.numeric(str_extract(variable, "[[:digit:]]"))
+#     )
+# 
+# # %>%
+#   extract(coordinates, into = c("lat", "long"), regex = "([+]+)([-]+)")
+
+```
+
+Now to add data to map:
+
+```{r}
+m3 <- leaflet(quakes) %>%
+        addProviderTiles("Stamen.Toner") %>%
+        addMarkers(lat = dat1$lat, lng = dat1$lng)
+m3
+```
+
+```{r}
+# a different approach
+# following blog better this makes more sense
+
+#data.frame core data
+dat$lng
+dat1$lng
+dat1$Name
+
+```
+
+```{r}
+#simple steps...
+# 1. add data to mymaps datasets
+
+```
+
